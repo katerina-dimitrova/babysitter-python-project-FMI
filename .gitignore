@@ -1,0 +1,21 @@
+# Virtual environment
+venv/
+ENV/
+env/
+
+# Python system files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Database files
+*.db
+*.sqlite3
+instance/
+
+# Editor settings (VS Code)
+.vscode/
+
+# Files with passwords or secret keys
+.env

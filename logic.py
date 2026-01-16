@@ -26,3 +26,17 @@ def validate_rating(rating: float) -> bool:
         return False
     except ValueError:
         return False
+    
+
+def search_sisters(
+    sitters: list[Babysitter], 
+    city: str | None = None, 
+    max_price: float | None = None, 
+    min_experience: int = 0
+) -> list[Babysitter]:
+    filtered = (s for s in sitters if s.experience_years >= min_experience)
+    if city:
+        filtered = (s for s in filtered if s.city.lower() == city.lower())
+    if max_price:
+        filtered = (s for s in filtered if s.hourly_rate <= max_price)
+    return list(filtered)

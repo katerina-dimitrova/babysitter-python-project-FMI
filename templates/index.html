@@ -1,31 +1,45 @@
 {% extends "base.html" %}
 
-{% block title %}Home - Babysitter Hub{% endblock %}
-
 {% block content %}
-<div class="jumbotron p-5 bg-white shadow-sm rounded">
-    <h1 class="display-4">Find the perfect sitter today!</h1>
-    <p class="lead">Safe, reliable, and close to you.</p>
-</div>
+<div class="container py-4">
+    <h2 class="mb-4">
+        {% if current_user.is_authenticated and current_user.user_type == 'parent' %}
+            Sitters Near You ({{ current_user.address }})
+        {% else %}
+            Featured Sitters
+        {% endif %}
+    </h2>
 
-<h2 class="mt-4 mb-3">Top Rated Sitters</h2>
-<div class="row">
-    {% for sitter in sitters %}
-    <div class="col-md-4 mb-3">
-        <div class="card h-100 shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title text-primary">{{ sitter.name }}</h5>
-                <h6 class="card-subtitle mb-2 text-muted">{{ sitter.city }}</h6>
-                <p class="card-text">{{ sitter.bio[:100] }}...</p>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="badge bg-success">${{ sitter.hourly_rate }}/hr</span>
-                    <span class="text-warning">★ {{ sitter.rating }}</span>
+    <div class="row">
+        {% for sitter in sitters %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{ sitter.name }}</h5>
+                    <p class="text-muted mb-1 small">{{ sitter.user.address }}</p>
+                    
+                    {% if sitter.distance is defined %}
+                    <p class="badge bg-info text-dark">
+                        <i class="bi bi-geo-alt"></i> {{ sitter.distance }} km away
+                    </p>
+                    {% endif %}
+
+                    <p class="card-text text-truncate">{{ sitter.bio }}</p>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <span class="fw-bold">${{ sitter.hourly_rate }}/hr</span>
+                        <span class="text-warning">★ {{ sitter.rating }}</span>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 p-3">
+                    <a href="/book/{{ sitter.id }}" class="btn btn-outline-primary w-100">Request Booking</a>
                 </div>
             </div>
         </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <h4>No sitters found. Be the first to join!</h4>
+        </div>
+        {% endfor %}
     </div>
-    {% else %}
-    <p>No sitters found. Be the first to register!</p>
-    {% endfor %}
 </div>
 {% endblock %}

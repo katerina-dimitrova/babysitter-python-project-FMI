@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Babysitter Hub{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-4">
+        <div class="card shadow border-0">
+            <div class="card-body p-4">
+                <h2 class="text-center mb-4">Login</h2>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email" class="form-control" placeholder="name@example.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Sign In</button>
+                    </div>
+                </form>
+                <div class="text-center mt-3">
+                    <p class="mb-0 text-muted">Don't have an account?</p>
+                    <a href="/register/parent" class="text-decoration-none">Register as Parent</a> | 
+                    <a href="/register/sitter" class="text-decoration-none">Become a Sitter</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

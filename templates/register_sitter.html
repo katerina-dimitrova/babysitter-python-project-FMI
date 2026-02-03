@@ -1,23 +1,35 @@
 {% extends "base.html" %}
 
-{% block title %}Become a Sitter - Babysitter Hub{% endblock %}
+{% block title %}Sitter Registration - Babysitter Hub{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h3 class="mb-0">Sitter Registration</h3>
+        <div class="card shadow border-0">
+            <div class="card-header bg-primary text-white p-3">
+                <h4 class="mb-0">Join as a Babysitter</h4>
             </div>
-            <div class="card-body">
+            <div class="card-body p-4">
                 <form method="POST">
+                    <h5 class="text-muted border-bottom pb-2 mb-3">Account Details</h5>
                     <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" name="name" class="form-control" placeholder="e.g. Jane Doe" required>
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email" class="form-control" placeholder="email@example.com" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">City</label>
-                        <input type="text" name="city" class="form-control" placeholder="e.g. London" required>
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+
+                    <h5 class="text-muted border-bottom pb-2 mt-4 mb-3">Professional Profile</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="Your Name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <input type="text" name="address" class="form-control" placeholder="e.g. Sofia, Vitosha Blvd 1" required>
+                        <small class="text-muted">We use this to calculate distances to nearby parents.</small>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -30,11 +42,11 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Short Bio</label>
-                        <textarea name="bio" class="form-control" rows="4" placeholder="Tell parents about your experience..."></textarea>
+                        <label class="form-label">About You (Bio)</label>
+                        <textarea name="bio" class="form-control" rows="3" placeholder="Tell parents about your skills..."></textarea>
                     </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Create Sitter Profile</button>
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Create Sitter Account</button>
                     </div>
                 </form>
             </div>

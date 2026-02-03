@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - Babysitter Hub{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center" style="width: 80px; height: 80px; font-size: 2rem;">
+                        {{ profile.name[0] | upper }}
+                    </div>
+                    <div class="ms-4">
+                        <h2 class="mb-0">{{ profile.name }}</h2>
+                        <span class="badge bg-secondary">{{ current_user.user_type | capitalize }} Account</span>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="text-muted small d-block">Email Address</label>
+                        <p class="lead">{{ current_user.email }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small d-block">Registered Address</label>
+                        <p class="lead">{{ current_user.address }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small d-block">Coordinates (Lat / Lng)</label>
+                        <p class="font-monospace text-primary">{{ current_user.lat }}, {{ current_user.lng }}</p>
+                    </div>
+                    
+                    {% if current_user.user_type == 'sitter' %}
+                    <div class="col-md-6">
+                        <label class="text-muted small d-block">Hourly Rate</label>
+                        <p class="lead">${{ profile.hourly_rate }}/hr</p>
+                    </div>
+                    {% else %}
+                    <div class="col-md-6">
+                        <label class="text-muted small d-block">Number of Children</label>
+                        <p class="lead">{{ profile.children_count }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mt-4 p-3 bg-light rounded">
+                    <label class="text-muted small d-block mb-2">About / Bio</label>
+                    <p class="mb-0 italic">{{ profile.bio or 'No bio provided.' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

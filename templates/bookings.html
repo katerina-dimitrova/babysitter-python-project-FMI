@@ -1,0 +1,54 @@
+{% extends "base.html" %} {% block content %}
+<div class="container">
+    <h2 class="mb-4">My Booking History</h2>
+
+    <div class="table-responsive bg-white shadow-sm p-3 rounded">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>
+                        {% if current_user.user_type == 'parent' %}Sitter{% else %}Parent{%
+                        endif %}
+                    </th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bookings %}
+                <tr>
+                    <td>{{ b.booking_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        {% if current_user.user_type == 'parent' %} {{
+                        b.sitter.sitter_profile.name }} {% else %} {{
+                        b.parent.parent_profile.name }} {% endif %}
+                    </td>
+                    <td>
+                        <span
+                            class="badge {% if b.status == 'Pending' %}bg-warning{% elif b.status == 'Confirmed' %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ b.status }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if current_user.user_type == 'sitter' and b.status == 'Pending'
+                        %}
+                        <a href="{{ url_for('booking_action', booking_id=b.id, action='confirm') }}"
+                            class="btn btn-sm btn-success">Confirm</a>
+                        <a href="{{ url_for('booking_action', booking_id=b.id, action='decline') }}"
+                            class="btn btn-sm btn-danger">Decline</a>
+                        {% else %}
+                        <span class="text-muted">No actions available</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center py-4">No bookings found yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime, timezone
 
 db = SQLAlchemy()
 
@@ -38,3 +39,13 @@ class ParentProfile(db.Model):
     name = db.Column(db.String(100), nullable=False)
     children_count = db.Column(db.Integer, default=1)
     bio = db.Column(db.Text)
+    
+class Booking(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    sitter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    booking_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    status = db.Column(db.String(20), default='Pending')
+
+    parent = db.relationship('User', foreign_keys=[parent_id], backref='my_hires')
+    sitter = db.relationship('User', foreign_keys=[sitter_id], backref='my_jobs')

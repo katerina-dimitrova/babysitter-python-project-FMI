@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 
-from models import db, User, SitterProfile, ParentProfile
+from models import db, User, SitterProfile, ParentProfile, Booking
 from logic import get_coords_from_address, sort_sitters_by_distance
 
 app = Flask(__name__)
@@ -130,6 +130,59 @@ def register_parent():
             flash(f'An error occurred: {str(e)}', 'danger')
 
     return render_template('register_parent.html')
+
+@app.route('/book/<int:sitter_user_id>')
+@login_required
+def book_sitter(sitter_user_id):
+    if current_user.user_type != 'parent':
+        flash('Only parents can book sitters.', 'warning')
+        return redirect(url_for('index'))
+
+    new_booking = Booking(parent_id=current_user.id, sitter_id=sitter_user_id)
+    db.session.add(new_booking)
+    db.session.commit()
+    
+    flash('Booking request sent successfully!', 'success')
+    return redirect(url_for('my_bookings'))
+
+@app.route('/my-bookings')
+@login_required
+def my_bookings():
+    if current_user.user_type == 'parent':
+        bookings = Booking.query.filter_by(parent_id=current_user.id).all()
+    else:
+        bookings = Booking.query.filter_by(sitter_id=current_user.id).all()
+    
+    return render_template('bookings.html', bookings=bookings)
+
+@app.route('/profile')
+@login_required
+def profile():
+    if current_user.user_type == 'sitter':
+        profile_data = current_user.sitter_profile
+    else:
+        profile_data = current_user.parent_profile
+    
+    return render_template('profile.html', profile=profile_data)
+
+@app.route('/booking/action/<int:booking_id>/<string:action>')
+@login_required
+def booking_action(booking_id, action):
+    booking = Booking.query.get_or_404(booking_id)
+    
+    if current_user.id != booking.sitter_id:
+        flash("Unauthorized action.", "danger")
+        return redirect(url_for('my_bookings'))
+
+    if action == 'confirm':
+        booking.status = 'Confirmed'
+        flash("Booking confirmed!", "success")
+    elif action == 'decline':
+        booking.status = 'Cancelled'
+        flash("Booking declined.", "info")
+    
+    db.session.commit()
+    return redirect(url_for('my_bookings'))
 
 @app.errorhandler(404)
 def page_not_found(e):

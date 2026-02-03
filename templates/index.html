@@ -1,19 +1,31 @@
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+{% extends "base.html" %}
 
-<div class="container mt-5">
-    <h1 class="text-primary mb-4">Find the perfect babysitter</h1>
-    <div class="row">
-        {% for sitter in sitters %}
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ sitter.name }}</h5>
-                    <p class="text-muted">{{ sitter.city }}</p>
-                    <p>Experience: <strong>{{ sitter.experience_years }} years</strong></p>
-                    <button class="btn btn-outline-primary btn-sm">View Profile</button>
+{% block title %}Home - Babysitter Hub{% endblock %}
+
+{% block content %}
+<div class="jumbotron p-5 bg-white shadow-sm rounded">
+    <h1 class="display-4">Find the perfect sitter today!</h1>
+    <p class="lead">Safe, reliable, and close to you.</p>
+</div>
+
+<h2 class="mt-4 mb-3">Top Rated Sitters</h2>
+<div class="row">
+    {% for sitter in sitters %}
+    <div class="col-md-4 mb-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{ sitter.name }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{ sitter.city }}</h6>
+                <p class="card-text">{{ sitter.bio[:100] }}...</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge bg-success">${{ sitter.hourly_rate }}/hr</span>
+                    <span class="text-warning">★ {{ sitter.rating }}</span>
                 </div>
             </div>
         </div>
-        {% endfor %}
     </div>
+    {% else %}
+    <p>No sitters found. Be the first to register!</p>
+    {% endfor %}
 </div>
+{% endblock %}

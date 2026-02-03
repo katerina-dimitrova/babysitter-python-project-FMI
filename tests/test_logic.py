@@ -1,16 +1,30 @@
 import unittest
-from models import Babysitter
-from logic import filter_by_city, get_top_rated_sitters, calculate_average_price, has_affordable_sitter, sort_sitters_by_experience, validate_rating
+from models import SitterProfile
+from logic import (
+    filter_by_city, 
+    get_top_rated_sitters, 
+    calculate_average_price, 
+    has_affordable_sitter, 
+    sort_sitters_by_experience, 
+    validate_rating
+)
 
-class TestBabysitterLogic(unittest.TestCase):
+class TestSitterLogic(unittest.TestCase):
 
     def setUp(self):
-        self.sitters = [
-            Babysitter(1, "Maria Petrova", "Sofia", 15.50, 5, "I love children!", 4.8, 12),
-            Babysitter(2, "Ivana Ivanova", "Plovdiv", 12.00, 2, "Student of pedagogy", 4.5, 5),
-            Babysitter(3, "Elena Georgieva", "Varna", 20.00, 7, "Experienced nanny", 4.9, 20),
-            Babysitter(4, "Anna Dimitrova", "Sofia", 10.00, 1, "New to babysitting", 4.0, 2),
-        ]
+        s1 = SitterProfile(name="Maria Petrova", hourly_rate=15.50, experience_years=5, rating=4.8)
+        s1.city = "Sofia" 
+        
+        s2 = SitterProfile(name="Ivana Ivanova", hourly_rate=12.00, experience_years=2, rating=4.5)
+        s2.city = "Plovdiv"
+        
+        s3 = SitterProfile(name="Elena Georgieva", hourly_rate=20.00, experience_years=7, rating=4.9)
+        s3.city = "Varna"
+        
+        s4 = SitterProfile(name="Anna Dimitrova", hourly_rate=10.00, experience_years=1, rating=4.0)
+        s4.city = "Sofia"
+
+        self.sitters = [s1, s2, s3, s4]
 
     def test_filter_by_city(self):
         sofia_sitters = filter_by_city(self.sitters, "Sofia")

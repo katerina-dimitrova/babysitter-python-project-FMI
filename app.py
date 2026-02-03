@@ -1,58 +1,134 @@
-import os
+
 from flask import Flask, render_template, request, redirect, url_for, flash
-from models import db, Babysitter, Parent
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+
+from models import db, User, SitterProfile, ParentProfile
+from logic import get_coords_from_address, sort_sitters_by_distance
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///services.db'
+app.config['SECRET_KEY'] = 'university-project-secret-key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///babysitter_hub.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'your_secret_key_here'
+
 db.init_app(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 with app.app_context():
     db.create_all()
 
+
 @app.route('/')
 def index():
-    sitters = Babysitter.query.order_by(Babysitter.rating.desc()).limit(3).all()
+    if current_user.is_authenticated and current_user.user_type == 'parent':
+        all_sitters = SitterProfile.query.all()
+        sitters = sort_sitters_by_distance(current_user.lat, current_user.lng, all_sitters)
+        return render_template('index.html', sitters=sitters)
+    
+    sitters = SitterProfile.query.order_by(SitterProfile.rating.desc()).limit(6).all()
     return render_template('index.html', sitters=sitters)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+
+        if user and user.check_password(password):
+            login_user(user)
+            flash('Logged in successfully!', 'success')
+            return redirect(url_for('index'))
+        
+        flash('Invalid email or password.', 'danger')
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('index'))
 
 @app.route('/register/sitter', methods=['GET', 'POST'])
 def register_sitter():
     if request.method == 'POST':
+        email = request.form.get('email')
+        address = request.form.get('address')
+        
+        if User.query.filter_by(email=email).first():
+            flash('Email already registered.', 'warning')
+            return redirect(url_for('register_sitter'))
+
+        lat, lng = get_coords_from_address(address)
+        if lat is None:
+            flash('Could not verify address. Please be more specific.', 'danger')
+            return render_template('register_sitter.html')
+
+        new_user = User(email=email, user_type='sitter', lat=lat, lng=lng, address=address)
+        new_user.set_password(request.form.get('password'))
+        
+        new_profile = SitterProfile(
+            user=new_user,
+            name=request.form.get('name'),
+            hourly_rate=float(request.form.get('hourly_rate')),
+            experience_years=int(request.form.get('experience')),
+            bio=request.form.get('bio')
+        )
+
         try:
-            new_sitter = Babysitter(
-                name=request.form['name'],
-                city=request.form['city'],
-                hourly_rate=float(request.form['hourly_rate']),
-                experience_years=int(request.form['experience']),
-                bio=request.form['bio']
-            )
-            db.session.add(new_sitter)
+            db.session.add(new_user)
+            db.session.add(new_profile)
             db.session.commit()
-            flash('Sitter registration successful!', 'success')
-            return redirect(url_for('index'))
+            flash('Sitter account created! Please log in.', 'success')
+            return redirect(url_for('login'))
         except Exception as e:
+            db.session.rollback()
             flash(f'An error occurred: {str(e)}', 'danger')
+
     return render_template('register_sitter.html')
 
 @app.route('/register/parent', methods=['GET', 'POST'])
 def register_parent():
     if request.method == 'POST':
+        email = request.form.get('email')
+        address = request.form.get('address')
+
+        if User.query.filter_by(email=email).first():
+            flash('Email already registered.', 'warning')
+            return redirect(url_for('register_parent'))
+
+        lat, lng = get_coords_from_address(address)
+        if lat is None:
+            flash('Could not verify address. Please be more specific.', 'danger')
+            return render_template('register_parent.html')
+
+        new_user = User(email=email, user_type='parent', lat=lat, lng=lng, address=address)
+        new_user.set_password(request.form.get('password'))
+
+        new_profile = ParentProfile(
+            user=new_user,
+            name=request.form.get('name'),
+            children_count=int(request.form.get('children_count')),
+            bio=request.form.get('bio')
+        )
+
         try:
-            new_parent = Parent(
-                name=request.form['name'],
-                city=request.form['city'],
-                children_count=int(request.form['children_count']),
-                needed_hours_per_week=int(request.form['hours']),
-                bio=request.form['bio']
-            )
-            db.session.add(new_parent)
+            db.session.add(new_user)
+            db.session.add(new_profile)
             db.session.commit()
-            flash('Parent registration successful!', 'success')
-            return redirect(url_for('index'))
+            flash('Parent account created! Please log in.', 'success')
+            return redirect(url_for('login'))
         except Exception as e:
-            flash(f'Error during registration: {str(e)}', 'danger')
+            db.session.rollback()
+            flash(f'An error occurred: {str(e)}', 'danger')
+
     return render_template('register_parent.html')
 
 @app.errorhandler(404)

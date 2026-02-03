@@ -4,6 +4,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 
 from models import db, User, SitterProfile, ParentProfile, Booking
 from logic import get_coords_from_address, sort_sitters_by_distance
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -18,7 +19,7 @@ login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 with app.app_context():
     db.create_all()
@@ -77,6 +78,7 @@ def register_sitter():
         new_profile = SitterProfile(
             user=new_user,
             name=request.form.get('name'),
+            phone_number=request.form.get('phone'),
             hourly_rate=float(request.form.get('hourly_rate')),
             experience_years=int(request.form.get('experience')),
             bio=request.form.get('bio')
@@ -115,6 +117,7 @@ def register_parent():
         new_profile = ParentProfile(
             user=new_user,
             name=request.form.get('name'),
+            phone_number=request.form.get('phone'),
             children_count=int(request.form.get('children_count')),
             bio=request.form.get('bio')
         )
@@ -131,19 +134,39 @@ def register_parent():
 
     return render_template('register_parent.html')
 
-@app.route('/book/<int:sitter_user_id>')
+@app.route('/book/<int:sitter_user_id>', methods=['GET', 'POST'])
 @login_required
 def book_sitter(sitter_user_id):
     if current_user.user_type != 'parent':
         flash('Only parents can book sitters.', 'warning')
         return redirect(url_for('index'))
 
-    new_booking = Booking(parent_id=current_user.id, sitter_id=sitter_user_id)
-    db.session.add(new_booking)
-    db.session.commit()
-    
-    flash('Booking request sent successfully!', 'success')
-    return redirect(url_for('my_bookings'))
+    if request.method == 'POST':
+        start_str = request.form.get('start_time')
+        end_str = request.form.get('end_time')
+        
+        try:
+            start_dt = datetime.strptime(start_str, '%Y-%m-%dT%H:%M')
+            end_dt = datetime.strptime(end_str, '%Y-%m-%dT%H:%M')
+            
+            if start_dt >= end_dt:
+                flash("End time must be after start time.", "danger")
+                return render_template('book_form.html', sitter_id=sitter_user_id)
+
+            new_booking = Booking(
+                parent_id=current_user.id, 
+                sitter_id=sitter_user_id,
+                start_time=start_dt,
+                end_time=end_dt
+            )
+            db.session.add(new_booking)
+            db.session.commit()
+            flash('Booking request sent!', 'success')
+            return redirect(url_for('my_bookings'))
+        except ValueError:
+            flash("Invalid date format.", "danger")
+
+    return render_template('book_form.html', sitter_id=sitter_user_id)
 
 @app.route('/my-bookings')
 @login_required

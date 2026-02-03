@@ -11,6 +11,7 @@
                         {% if current_user.user_type == 'parent' %}Sitter{% else %}Parent{%
                         endif %}
                     </th>
+                    <th>Phone</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -18,11 +19,21 @@
             <tbody>
                 {% for b in bookings %}
                 <tr>
-                    <td>{{ b.booking_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        <strong>{{ b.start_time.strftime('%d %b %Y') }}</strong><br>
+                        <small class="text-muted">
+                            {{ b.start_time.strftime('%H:%M') }} - {{ b.end_time.strftime('%H:%M') }}
+                        </small>
+                    </td>
                     <td>
                         {% if current_user.user_type == 'parent' %} {{
                         b.sitter.sitter_profile.name }} {% else %} {{
                         b.parent.parent_profile.name }} {% endif %}
+                    </td>
+                    <td>
+                        {% if current_user.user_type == 'parent' %} {{
+                        b.sitter.sitter_profile.phone_number }} {% else %} {{
+                        b.parent.parent_profile.phone_number }} {% endif %}
                     </td>
                     <td>
                         <span
@@ -44,7 +55,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="4" class="text-center py-4">No bookings found yet.</td>
+                    <td colspan="5" class="text-center py-4">No bookings found yet.</td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -211,6 +211,15 @@ def booking_action(booking_id, action):
     db.session.commit()
     return redirect(url_for('my_bookings'))
 
+@app.route('/user/<int:user_id>')
+@login_required
+def view_public_profile(user_id):
+    target_user = User.query.get_or_404(user_id)
+    if target_user.user_type == 'sitter':
+        return render_template('public_profile.html', profile=target_user.sitter_profile, user=target_user)
+    else:
+        return render_template('public_profile.html', profile=target_user.parent_profile, user=target_user)
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404

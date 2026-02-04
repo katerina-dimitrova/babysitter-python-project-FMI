@@ -33,6 +33,7 @@ class SitterProfile(db.Model):
     experience_years = db.Column(db.Integer, default=0)
     bio = db.Column(db.Text)
     rating = db.Column(db.Float, default=0.0)
+    reviews_count = db.Column(db.Integer, default=0)
 
 class ParentProfile(db.Model):
     id = db.Column(db.Integer, primary_key=True)

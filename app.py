@@ -180,7 +180,7 @@ def my_bookings():
     else:
         bookings = Booking.query.filter_by(sitter_id=current_user.id).all()
     
-    return render_template('bookings.html', bookings=bookings)
+    return render_template('bookings.html', bookings=bookings, now=datetime.now())
 
 @app.route('/profile')
 @login_required
@@ -219,6 +219,43 @@ def view_public_profile(user_id):
         return render_template('public_profile.html', profile=target_user.sitter_profile, user=target_user)
     else:
         return render_template('public_profile.html', profile=target_user.parent_profile, user=target_user)
+
+@app.route('/booking/cancel/<int:booking_id>')
+@login_required
+def cancel_booking(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+    
+    if current_user.id != booking.parent_id:
+        flash("Unauthorized action.", "danger")
+        return redirect(url_for('my_bookings'))
+
+    if booking.start_time > datetime.now():
+        booking.status = 'Cancelled'
+        db.session.commit()
+        flash("Booking cancelled successfully.", "info")
+    else:
+        flash("You cannot cancel a booking that has already started.", "warning")
+        
+    return redirect(url_for('my_bookings'))
+
+@app.route('/rate-sitter/<int:booking_id>', methods=['POST'])
+@login_required
+def rate_sitter(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+    new_rating = float(request.form.get('rating'))
+    
+    if current_user.id == booking.parent_id and booking.end_time < datetime.now():
+        sitter = booking.sitter.sitter_profile
+        
+        total_rating = (sitter.rating * sitter.reviews_count) + new_rating
+        sitter.reviews_count += 1
+        sitter.rating = round(total_rating / sitter.reviews_count, 1)
+        
+        booking.status = 'Completed'
+        db.session.commit()
+        flash(f"Thank you! You rated {sitter.name} with {new_rating} stars.", "success")
+        
+    return redirect(url_for('my_bookings'))
 
 @app.errorhandler(404)
 def page_not_found(e):

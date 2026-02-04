@@ -3,7 +3,12 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 
 from models import db, User, SitterProfile, ParentProfile, Booking
-from logic import get_coords_from_address, sort_sitters_by_distance
+from logic import (get_coords_from_address, 
+                   has_affordable_sitter, 
+                   sort_sitters_by_distance, 
+                   sort_sitters_by_experience, 
+                   calculate_average_price, 
+                   search_sitters)
 from datetime import datetime
 
 app = Flask(__name__)
@@ -27,13 +32,35 @@ with app.app_context():
 
 @app.route('/')
 def index():
-    if current_user.is_authenticated and current_user.user_type == 'parent':
-        all_sitters = SitterProfile.query.all()
-        sitters = sort_sitters_by_distance(current_user.lat, current_user.lng, all_sitters)
-        return render_template('index.html', sitters=sitters)
+    city_query = request.args.get('city', '').strip()
+    max_price = request.args.get('max_price', type=float)
+    min_exp = request.args.get('min_experience', type=int, default=0)
+    sort_option = request.args.get('sort')
+
+    all_sitters = SitterProfile.query.all()
+
+    sitters = search_sitters(all_sitters, city_query, max_price, min_exp)
     
-    sitters = SitterProfile.query.order_by(SitterProfile.rating.desc()).limit(6).all()
-    return render_template('index.html', sitters=sitters)
+    if sort_option == 'experience':
+        sitters = sort_sitters_by_experience(sitters)
+    elif sort_option == 'rating':
+        sitters = sorted(sitters, key=lambda x: x.rating, reverse=True)
+    elif current_user.is_authenticated and current_user.user_type == 'parent':
+        print(f"DEBUG: Parent Coords -> {current_user.lat}, {current_user.lng}")
+        sitters = sort_sitters_by_distance(current_user.lat, current_user.lng, sitters)
+        if sitters:
+            print(f"DEBUG: First Sitter Coords -> {sitters[0].user.lat}, {sitters[0].user.lng}")
+    else:
+        sitters = sorted(sitters, key=lambda x: x.rating, reverse=True)[:6]
+
+    avg_p = calculate_average_price(sitters)
+    
+    affordable = has_affordable_sitter(sitters, 15.0)
+
+    return render_template('index.html', 
+                           sitters=sitters, 
+                           avg_price=avg_p, 
+                           has_affordable=affordable)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -61,26 +88,78 @@ def logout():
 def register_sitter():
     if request.method == 'POST':
         email = request.form.get('email')
-        address = request.form.get('address')
+        
         
         if User.query.filter_by(email=email).first():
             flash('Email already registered.', 'warning')
             return redirect(url_for('register_sitter'))
 
-        lat, lng = get_coords_from_address(address)
+        city = request.form.get('city')
+        neighborhood = request.form.get('neighborhood', '').strip()
+        street = request.form.get('street', '').strip()
+        street_number = request.form.get('street_number', '').strip()
+        block = request.form.get('block', '').strip()
+        entrance = request.form.get('entrance', '').strip()
+        
+        errors = []
+        if not city:
+            errors.append("City is mandatory.")
+        
+        if not neighborhood and not street:
+            errors.append("Please provide either a Neighborhood or a Street name.")
+        
+        if not street_number and not block:
+            errors.append("Please provide either a Street Number or a Block number.")
+
+        if errors:
+            for error in errors:
+                flash(error, 'danger')
+            return render_template('register_sitter.html')
+        
+        address_parts = []
+        if street:
+            st_line = street.strip()
+            if street_number:
+                st_line += f" {street_number.strip()}"
+            address_parts.append(st_line)
+        if neighborhood:
+            address_parts.append(neighborhood.strip())
+        if block:
+            address_parts.append(f"блок {block.strip()}")
+            if entrance: 
+                address_parts.append(entrance.strip())
+        if city:
+            address_parts.append(city.strip())
+
+        full_address = ", ".join(address_parts)
+        
+        lat, lng = get_coords_from_address(full_address)
+
         if lat is None:
-            flash('Could not verify address. Please be more specific.', 'danger')
+            flash('Could not verify address. Please check your city and street.', 'danger')
             return render_template('register_sitter.html')
 
-        new_user = User(email=email, user_type='sitter', lat=lat, lng=lng, address=address)
+        new_user = User(
+            email=email, 
+            user_type='sitter', 
+            lat=lat, 
+            lng=lng,
+            address = full_address,
+            city=city,
+            neighborhood=neighborhood,
+            street=street,
+            street_number=street_number,
+            block=block,
+            entrance=entrance
+        )
         new_user.set_password(request.form.get('password'))
         
         new_profile = SitterProfile(
             user=new_user,
             name=request.form.get('name'),
             phone_number=request.form.get('phone'),
-            hourly_rate=float(request.form.get('hourly_rate')),
-            experience_years=int(request.form.get('experience')),
+            hourly_rate=max(0, float(request.form.get('hourly_rate'))),
+            experience_years=max(0, int(request.form.get('experience'))),
             bio=request.form.get('bio')
         )
 
@@ -100,25 +179,77 @@ def register_sitter():
 def register_parent():
     if request.method == 'POST':
         email = request.form.get('email')
-        address = request.form.get('address')
-
+        
         if User.query.filter_by(email=email).first():
             flash('Email already registered.', 'warning')
             return redirect(url_for('register_parent'))
 
-        lat, lng = get_coords_from_address(address)
+        city = request.form.get('city')
+        neighborhood = request.form.get('neighborhood', '').strip()
+        street = request.form.get('street', '').strip()
+        street_number = request.form.get('street_number', '').strip()
+        block = request.form.get('block', '').strip()
+        entrance = request.form.get('entrance', '').strip()
+        
+        errors = []
+        if not city:
+            errors.append("City is mandatory.")
+        
+        if not neighborhood and not street:
+            errors.append("Please provide either a Neighborhood or a Street name.")
+        
+        if not street_number and not block:
+            errors.append("Please provide either a Street Number or a Block number.")
+
+        if errors:
+            for error in errors:
+                flash(error, 'danger')
+            return render_template('register_parent.html')
+        
+        address_parts = []
+        if street:
+            st_line = street.strip()
+            if street_number:
+                st_line += f" {street_number.strip()}"
+            address_parts.append(st_line)
+        if neighborhood:
+            address_parts.append(neighborhood.strip())
+        if block:
+            address_parts.append(f"block {block.strip()}")
+            if entrance: 
+                address_parts.append(entrance.strip())
+        if city:
+            address_parts.append(city.strip())
+
+        
+        full_address = ", ".join(address_parts)
+        
+        lat, lng = get_coords_from_address(full_address)
+
         if lat is None:
-            flash('Could not verify address. Please be more specific.', 'danger')
+            flash('Could not verify address. Please check your city and street.', 'danger')
             return render_template('register_parent.html')
 
-        new_user = User(email=email, user_type='parent', lat=lat, lng=lng, address=address)
+        new_user = User(
+            email=email, 
+            user_type='parent', 
+            lat=lat, 
+            lng=lng,
+            address = full_address,
+            city=city,
+            neighborhood=neighborhood,
+            street=street,
+            street_number=street_number,
+            block=block,
+            entrance=entrance
+        )
         new_user.set_password(request.form.get('password'))
-
+        
         new_profile = ParentProfile(
             user=new_user,
             name=request.form.get('name'),
             phone_number=request.form.get('phone'),
-            children_count=int(request.form.get('children_count')),
+            children_count=max(1, int(request.form.get('children_count'))), 
             bio=request.form.get('bio')
         )
 
@@ -126,7 +257,7 @@ def register_parent():
             db.session.add(new_user)
             db.session.add(new_profile)
             db.session.commit()
-            flash('Parent account created! Please log in.', 'success')
+            flash('Parent account created! Please log in to find a sitter.', 'success')
             return redirect(url_for('login'))
         except Exception as e:
             db.session.rollback()

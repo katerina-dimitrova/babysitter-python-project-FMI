@@ -11,10 +11,18 @@ class User(db.Model, UserMixin):
     password_hash = db.Column(db.String(128))
     user_type = db.Column(db.String(20))
     
-    lat = db.Column(db.Float, nullable=True)
-    lng = db.Column(db.Float, nullable=True)
-    address = db.Column(db.String(200), nullable=True)
-
+    city = db.Column(db.String(50), nullable=False)
+    neighborhood = db.Column(db.String(50), nullable=True)
+    street = db.Column(db.String(100), nullable=True)
+    street_number = db.Column(db.String(10), nullable=True)
+    block = db.Column(db.String(10), nullable=True)
+    entrance = db.Column(db.String(10), nullable=True)
+    
+    address = db.Column(db.String(255))
+    
+    lat = db.Column(db.Float)
+    lng = db.Column(db.Float)
+    
     sitter_profile = db.relationship('SitterProfile', backref='user', uselist=False)
     parent_profile = db.relationship('ParentProfile', backref='user', uselist=False)
 
@@ -28,7 +36,7 @@ class SitterProfile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     name = db.Column(db.String(100), nullable=False)
-    phone_number = db.Column(db.String(20), nullable=False) # Ново поле
+    phone_number = db.Column(db.String(20), nullable=False)
     hourly_rate = db.Column(db.Float, nullable=False)
     experience_years = db.Column(db.Integer, default=0)
     bio = db.Column(db.Text)
@@ -39,7 +47,7 @@ class ParentProfile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     name = db.Column(db.String(100), nullable=False)
-    phone_number = db.Column(db.String(20), nullable=False) # Ново поле
+    phone_number = db.Column(db.String(20), nullable=False)
     children_count = db.Column(db.Integer, default=1)
     bio = db.Column(db.Text)
 

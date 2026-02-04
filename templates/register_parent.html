@@ -4,49 +4,82 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
+    <div class="col-md-7">
         <div class="card shadow border-0">
             <div class="card-header bg-success text-white p-3">
-                <h4 class="mb-0">Find a Sitter: Sign Up</h4>
+                <h4 class="mb-0"><i class="bi bi-person-plus"></i> Join as a Parent</h4>
             </div>
             <div class="card-body p-4">
                 <form method="POST">
                     <h5 class="text-muted border-bottom pb-2 mb-3">Account Details</h5>
-                    <div class="mb-3">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" name="email" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Password</label>
-                        <input type="password" name="password" class="form-control" required>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" name="email" class="form-control" placeholder="email@example.com" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
                     </div>
 
-                    <h5 class="text-muted border-bottom pb-2 mt-4 mb-3">Family Profile</h5>
-                    <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" name="name" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Phone Number</label>
-                        <input type="text" name="phone" class="form-control" placeholder="+359..." required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Home Address</label>
-                        <input type="text" name="address" class="form-control" placeholder="e.g. Sofia, Studentski grad"
-                            required>
-                        <small class="text-muted">Your address is used to find sitters in your area.</small>
+                    <h5 class="text-muted border-bottom pb-2 mt-4 mb-3">Personal Information</h5>
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="Your Name" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" name="phone" class="form-control" placeholder="+359..." required>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Number of Children</label>
-                        <input type="number" name="children_count" class="form-control" required>
+                        <input type="number" name="children_count" class="form-control" min="1" value="1" required>
                     </div>
+
+                    <h5 class="text-muted border-bottom pb-2 mt-4 mb-3">Home Address</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">City</label>
+                            <input type="text" name="city" class="form-control" placeholder="e.g. София" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Neighborhood</label>
+                            <input type="text" name="neighborhood" class="form-control" placeholder="e.g. Люлин">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-9 mb-3">
+                            <label class="form-label">Street Name</label>
+                            <input type="text" name="street" class="form-control" placeholder="e.g. Цар Борис III">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Number</label>
+                            <input type="text" name="street_number" class="form-control" placeholder="10">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Block</label>
+                            <input type="text" name="block" class="form-control" placeholder="5">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Entrance</label>
+                            <input type="text" name="entrance" class="form-control" placeholder="B">
+                        </div>
+                    </div>
+
                     <div class="mb-3">
-                        <label class="form-label">Additional Info</label>
-                        <textarea name="bio" class="form-control" rows="3"
-                            placeholder="Special requirements, schedule, etc."></textarea>
+                        <label class="form-label">Additional Info (Bio)</label>
+                        <textarea name="bio" class="form-control" rows="3" placeholder="Tell us about your requirements..."></textarea>
                     </div>
+
                     <div class="d-grid mt-4">
-                        <button type="submit" class="btn btn-success btn-lg">Create Parent Account</button>
+                        <button type="submit" class="btn btn-success btn-lg shadow-sm">Create Parent Account</button>
                     </div>
                 </form>
             </div>

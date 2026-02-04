@@ -149,6 +149,10 @@ def book_sitter(sitter_user_id):
             start_dt = datetime.strptime(start_str, '%Y-%m-%dT%H:%M')
             end_dt = datetime.strptime(end_str, '%Y-%m-%dT%H:%M')
             
+            if start_dt < datetime.now():
+                flash("You cannot book a sitter for a past date or time!", "danger")
+                return render_template('book_form.html', sitter_id=sitter_user_id)
+            
             if start_dt >= end_dt:
                 flash("End time must be after start time.", "danger")
                 return render_template('book_form.html', sitter_id=sitter_user_id)

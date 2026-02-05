@@ -23,7 +23,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 @login_manager.user_loader
-def load_user(user_id):
+def load_user(user_id: str) -> User:
     return db.session.get(User, int(user_id))
 
 with app.app_context():
@@ -31,7 +31,8 @@ with app.app_context():
 
 
 @app.route('/')
-def index():
+def index() -> str:
+    """Main page displaying sitters with filtering and sorting options."""
     city_query = request.args.get('city', '').strip()
     max_price = request.args.get('max_price', type=float)
     min_exp = request.args.get('min_experience', type=int, default=0)
@@ -63,7 +64,8 @@ def index():
                            has_affordable=affordable)
 
 @app.route('/login', methods=['GET', 'POST'])
-def login():
+def login() -> str:
+    """Handle user login by verifying credentials and starting a session."""
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
@@ -79,13 +81,15 @@ def login():
 
 @app.route('/logout')
 @login_required
-def logout():
+def logout() -> str:
+    """Log out the current user and end their session."""
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('index'))
 
 @app.route('/register/sitter', methods=['GET', 'POST'])
-def register_sitter():
+def register_sitter() -> str:
+    """Handle sitter registration by collecting user details and creating a new sitter profile."""
     if request.method == 'POST':
         email = request.form.get('email')
         
@@ -176,7 +180,8 @@ def register_sitter():
     return render_template('register_sitter.html')
 
 @app.route('/register/parent', methods=['GET', 'POST'])
-def register_parent():
+def register_parent() -> str:
+    """Handle parent registration by collecting user details and creating a new parent profile."""
     if request.method == 'POST':
         email = request.form.get('email')
         
@@ -267,7 +272,8 @@ def register_parent():
 
 @app.route('/book/<int:sitter_user_id>', methods=['GET', 'POST'])
 @login_required
-def book_sitter(sitter_user_id):
+def book_sitter(sitter_user_id: int) -> str:
+    """Allow a parent to book a sitter for a specified time period."""
     if current_user.user_type != 'parent':
         flash('Only parents can book sitters.', 'warning')
         return redirect(url_for('index'))
@@ -305,7 +311,8 @@ def book_sitter(sitter_user_id):
 
 @app.route('/my-bookings')
 @login_required
-def my_bookings():
+def my_bookings() -> str:
+    """Display all bookings for the current user, whether parent or sitter."""
     if current_user.user_type == 'parent':
         bookings = Booking.query.filter_by(parent_id=current_user.id).all()
     else:
@@ -315,7 +322,8 @@ def my_bookings():
 
 @app.route('/profile')
 @login_required
-def profile():
+def profile() -> str:
+    """Display the profile of the currently logged-in user."""
     if current_user.user_type == 'sitter':
         profile_data = current_user.sitter_profile
     else:
@@ -325,7 +333,8 @@ def profile():
 
 @app.route('/booking/action/<int:booking_id>/<string:action>')
 @login_required
-def booking_action(booking_id, action):
+def booking_action(booking_id: int, action: str) -> str:
+    """Allow sitters to confirm or decline booking requests."""
     booking = Booking.query.get_or_404(booking_id)
     
     if current_user.id != booking.sitter_id:
@@ -344,7 +353,8 @@ def booking_action(booking_id, action):
 
 @app.route('/user/<int:user_id>')
 @login_required
-def view_public_profile(user_id):
+def view_public_profile(user_id: int) -> str:
+    """View the public profile of another user (sitter or parent)."""
     target_user = User.query.get_or_404(user_id)
     if target_user.user_type == 'sitter':
         return render_template('public_profile.html', profile=target_user.sitter_profile, user=target_user)
@@ -353,7 +363,8 @@ def view_public_profile(user_id):
 
 @app.route('/booking/cancel/<int:booking_id>')
 @login_required
-def cancel_booking(booking_id):
+def cancel_booking(booking_id: int) -> str:
+    """Allow parents to cancel their bookings if they haven't started yet."""
     booking = Booking.query.get_or_404(booking_id)
     
     if current_user.id != booking.parent_id:
@@ -371,7 +382,8 @@ def cancel_booking(booking_id):
 
 @app.route('/rate-sitter/<int:booking_id>', methods=['POST'])
 @login_required
-def rate_sitter(booking_id):
+def rate_sitter(booking_id: int) -> str:
+    """Allow parents to rate sitters after a completed booking."""
     booking = Booking.query.get_or_404(booking_id)
     new_rating = float(request.form.get('rating'))
     
@@ -389,11 +401,13 @@ def rate_sitter(booking_id):
     return redirect(url_for('my_bookings'))
 
 @app.errorhandler(404)
-def page_not_found(e):
+def page_not_found(e) -> str:
+    """Render a custom 404 error page when a page is not found."""
     return render_template('404.html'), 404
 
 @app.errorhandler(500)
-def internal_server_error(e):
+def internal_server_error(e) -> str:
+    """Handle internal server errors with a generic message."""
     return "Error occurred. Please try again later.", 500
 
 if __name__ == '__main__':

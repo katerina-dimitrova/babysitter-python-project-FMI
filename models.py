@@ -18,7 +18,7 @@ class User(db.Model, UserMixin):
     block = db.Column(db.String(10), nullable=True)
     entrance = db.Column(db.String(10), nullable=True)
     
-    address = db.Column(db.String(255))
+    address = db.Column(db.String(255), nullable=False)
     
     lat = db.Column(db.Float)
     lng = db.Column(db.Float)
@@ -26,10 +26,10 @@ class User(db.Model, UserMixin):
     sitter_profile = db.relationship('SitterProfile', backref='user', uselist=False)
     parent_profile = db.relationship('ParentProfile', backref='user', uselist=False)
 
-    def set_password(self, password):
+    def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
 
-    def check_password(self, password):
+    def check_password(self, password: str) -> bool:
         return check_password_hash(self.password_hash, password)
 
 class SitterProfile(db.Model):
